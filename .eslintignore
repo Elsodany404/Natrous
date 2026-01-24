@@ -1,6 +1,7 @@
 node_modules
 .parcel-cache
 .vscode
+dist
 dev-data
 js
 public
