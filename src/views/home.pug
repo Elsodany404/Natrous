@@ -1,0 +1,195 @@
+extends index
+
+block stylesheets
+  link(rel='stylesheet' href='/main.css')
+  link(rel='stylesheet' href='/img/home/icon-font.css')
+
+block pageLayout
+  .navigation
+    input.navigation__checkbox(type='checkbox' id='navi-toggle' aria-label='Toggle navigation')
+    label.navigation__button(for='navi-toggle' aria-label='Open navigation')
+      span.navigation__icon(aria-hidden='true')
+    .navigation__background(aria-hidden='true')
+    nav.navigation__nav(aria-label='Main navigation')
+      ul.navigation__list
+        li.navigation__item
+          a.navigation__link(href='/overview')
+            span 01
+            | All tours
+        li.navigation__item
+          a.navigation__link(href='#section-about')
+            span 01
+            | About Natours
+        li.navigation__item
+          a.navigation__link(href='#section-features')
+            span 02
+            | Your benefits
+        li.navigation__item
+          a.navigation__link(href='#section-tours')
+            span 03
+            | Popular tours
+        li.navigation__item
+          a.navigation__link(href='#section-stories')
+            span 04
+            | Stories
+        li.navigation__item
+          a.navigation__link(href='#section-book')
+            span 05
+            | Book now
+        if user
+          li.navigation__item
+            a.navigation__link(href='/my-bookings')
+              span 06
+              | My bookings
+          li.navigation__item
+            a.navigation__link.nav__el--logout(href='#')
+              span 07
+              | Log out
+        else
+          li.navigation__item
+            a.navigation__link(href='/login')
+              span 06
+              | Log in
+
+  header.header
+    .header__logo-box
+      img.header__logo(src='/img/home/logo-white.png' alt='Natours')
+    .header__text-box
+      h1.heading-primary
+        span.heading-primary--main Outdoors
+        span.heading-primary--sub is where life happens
+      a.btn.btn--white.btn--animated(href='/overview') Discover our tours
+
+  main
+    section.section-about#section-about
+      .u-center-text.u-margin-bottom-big
+        h2.heading-secondary Exciting tours for adventurous people
+      .row
+        .col-1-of-2
+          h3.heading-tertiary.u-margin-bottom-small You're going to fall in love with nature
+          p.paragraph Discover remarkable landscapes with guides who know the trails, the quiet places, and the stories behind them.
+          h3.heading-tertiary.u-margin-bottom-small Live adventures like you never have before
+          p.paragraph Find a new perspective in the wild, with carefully planned trips for curious travelers.
+          a.btn-text(href='/overview') Explore the tours &rarr;
+        .col-1-of-2
+          .composition
+            img.composition__photo.composition__photo--p1(src='/img/home/nat-1-large.jpg' srcset='/img/home/nat-1.jpg 300w, /img/home/nat-1-large.jpg 1000w' sizes='(max-width: 56.25em) 20vw, (max-width: 37.5em) 30vw, 300px' alt='Hikers looking across a mountain valley')
+            img.composition__photo.composition__photo--p2(src='/img/home/nat-2-large.jpg' srcset='/img/home/nat-2.jpg 300w, /img/home/nat-2-large.jpg 1000w' sizes='(max-width: 56.25em) 20vw, (max-width: 37.5em) 30vw, 300px' alt='A forest lake surrounded by mountains')
+            img.composition__photo.composition__photo--p3(src='/img/home/nat-3-large.jpg' srcset='/img/home/nat-3.jpg 300w, /img/home/nat-3-large.jpg 1000w' sizes='(max-width: 56.25em) 20vw, (max-width: 37.5em) 30vw, 300px' alt='A hiker following a mountain trail')
+
+    section.section-features#section-features
+      .row
+        .col-1-of-4
+          .feature-box
+            i.feature-box__icon.icon-basic-world(aria-hidden='true')
+            h3.heading-tertiary.u-margin-bottom-small Explore the world
+            p.feature-box__text See the outdoors from a new point of view, one memorable trail at a time.
+        .col-1-of-4
+          .feature-box
+            i.feature-box__icon.icon-basic-compass(aria-hidden='true')
+            h3.heading-tertiary.u-margin-bottom-small Meet nature
+            p.feature-box__text Take time to slow down and get closer to the places you came to see.
+        .col-1-of-4
+          .feature-box
+            i.feature-box__icon.icon-basic-map(aria-hidden='true')
+            h3.heading-tertiary.u-margin-bottom-small Find your way
+            p.feature-box__text Travel with experienced guides and a plan built around the journey.
+        .col-1-of-4
+          .feature-box
+            i.feature-box__icon.icon-basic-heart(aria-hidden='true')
+            h3.heading-tertiary.u-margin-bottom-small Feel the difference
+            p.feature-box__text Return home with fresh air in your lungs and stories worth sharing.
+
+    section.section-tours#section-tours
+      .u-center-text.u-margin-bottom-big
+        h2.heading-secondary Most popular tours
+      if tours.length
+        .tour-grid
+          each tour, index in tours
+            - const cardVariant = (index % 3) + 1
+            .card
+              .card__side.card__side--front
+                .card__picture(class=`card__picture--${cardVariant}`)
+                  | &nbsp;
+                h4.card__heading
+                  span.card__heading-span(class=`card__heading-span--${cardVariant}`)= tour.name
+                .card__details
+                  ul
+                    li= `${tour.duration} day tour${tour.duration === 1 ? '' : 's'}`
+                    li= `Up to ${tour.maxGroupSize} people`
+                    li= `${tour.guides.length} tour guide${tour.guides.length === 1 ? '' : 's'}`
+                    li= `${tour.locations.length} stops along the way`
+                    li= `Difficulty: ${tour.difficulty}`
+              .card__side.card__side--back(class=`card__side--back-${cardVariant}`)
+                .card__cta
+                  .card__price-box
+                    p.card__price-only From
+                    p.card__price-value= `$${tour.price}`
+                  a.btn.btn--white(href=`/tour/${tour.slug}`) View tour
+        .u-center-text.u-margin-top-huge
+          a.btn.btn--green(href='/overview') Discover all tours
+      else
+        .u-center-text
+          p.paragraph Tours are being prepared. Check back soon.
+
+    section.section-stories#section-stories
+      .bg-video(aria-hidden='true')
+        video.bg-video__content(autoplay muted loop playsinline poster='/img/home/hero-small.jpg')
+          source(src='/img/home/video.mp4' type='video/mp4')
+          source(src='/img/home/video.webm' type='video/webm')
+      .u-center-text.u-margin-bottom-big
+        h2.heading-secondary We make people genuinely happy
+      .row
+        .story
+          figure.story__shape
+            img.story__img(src='/img/home/nat-8.jpg' alt='Traveler enjoying a mountain view' loading='lazy')
+            figcaption.story__caption Mary Smith
+          .story__text
+            h3.heading-tertiary.u-margin-bottom-small I had the best week ever with my family
+            p.story__author Mary Smith
+            p The days on the trail gave us time to reconnect, explore somewhere new, and enjoy the journey together.
+      .row
+        .story
+          figure.story__shape
+            img.story__img(src='/img/home/nat-9.jpg' alt='Traveler taking in a scenic landscape' loading='lazy')
+            figcaption.story__caption Jack Wilson
+          .story__text
+            h3.heading-tertiary.u-margin-bottom-small My favorite kind of reset
+            p.story__author Jack Wilson
+            p Thoughtful guides, beautiful places, and the right pace made this an adventure I will remember.
+      .u-center-text.u-margin-top-huge
+        a.btn-text(href='/overview') Find your next story &rarr;
+
+    section.section-book#section-book
+      .row
+        .book
+          .book__form
+            .u-margin-bottom-medium
+              h2.heading-secondary Start your next adventure
+            p.paragraph Choose a tour that speaks to you, then open its details to see dates and booking options.
+            .book__actions
+              a.btn.btn--green(href='/overview') Browse tours
+              if user
+                a.btn-text(href='/my-bookings') View my bookings
+              else
+                a.btn-text(href='/sign-up') Create an account &rarr;
+
+  footer.footer
+    .footer__logo-box
+      picture.footer__logo
+        source(srcset='/img/home/logo-green-small-1x.png 1x, /img/home/logo-green-small-2x.png 2x' media='(max-width: 37.5em)')
+        img(srcset='/img/home/logo-green-1x.png 1x, /img/home/logo-green-2x.png 2x' src='/img/home/logo-green-2x.png' alt='Natours')
+    .row
+      .col-1-of-2
+        .footer__navigation
+          ul.footer__list
+            li.footer__item
+              a.footer__link(href='/overview') About
+            li.footer__item
+              a.footer__link(href='/overview') Tours
+            li.footer__item
+              a.footer__link(href='/login') Contact
+            li.footer__item
+              a.footer__link(href='/sign-up') Join us
+      .col-1-of-2
+        p.footer__copyright Natours offers small-group outdoor tours for curious travelers. All rights reserved.

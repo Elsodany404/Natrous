@@ -20,5 +20,5 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*"],
-  "exclude": ["ts", "node_modules"]
+  "exclude": ["src/client", "ts", "node_modules"]
 }

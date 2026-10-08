@@ -1,0 +1,63 @@
+.main--profile {
+  display: flex;
+  padding: 0;
+}
+
+.user-view {
+  background-color: #fff;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  -webkit-box-shadow: 0 2.5rem 8rem 2rem rgba(0, 0, 0, 0.07);
+  box-shadow: 0 2.5rem 8rem 2rem rgba(0, 0, 0, 0.07);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+.user-view__menu {
+  -webkit-box-flex: 32rem;
+  -ms-flex: 32rem 0 0px;
+  flex: 32rem 0 0;
+  background-image: -webkit-gradient(
+    linear,
+    left top,
+    right bottom,
+    from(#7dd56f),
+    to(#28b487)
+  );
+  background-image: linear-gradient(to right bottom, #7dd56f, #28b487);
+  padding: 4rem 0;
+}
+.user-view__content {
+  -webkit-box-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  padding: 7rem 0;
+}
+.user-view__form-container {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 0 8rem;
+}
+
+@media only screen and (max-width: 56.25em) {
+  .user-view {
+    flex-direction: column;
+  }
+
+  .user-view__menu {
+    flex: 0 0 auto;
+    padding: 2rem 0;
+  }
+
+  .user-view__content {
+    padding: 4rem 0;
+  }
+
+  .user-view__form-container {
+    padding: 0 3rem;
+  }
+}

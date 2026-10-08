@@ -59,9 +59,17 @@ block content
   section.section-map
     div#map(data-locations=`${JSON.stringify(tour.locations)}`)
   section.section-reviews
-    div.reviews
-      each review in tour.reviews
-        +reviews(review)
+    .reviews__container
+      .reviews__controls
+        button.reviews__control(type='button', aria-label='Previous reviews', data-review-direction='previous', disabled)
+          svg(aria-hidden='true')
+            use(xlink:href='/img/icons.svg#icon-chevron-left')
+        button.reviews__control(type='button', aria-label='Next reviews', data-review-direction='next')
+          svg(aria-hidden='true')
+            use(xlink:href='/img/icons.svg#icon-chevron-right')
+      .reviews
+        each review in tour.reviews
+          +reviews(review)
   section.section-cta
     .cta
       .cta__img.cta__img--logo

@@ -27,6 +27,20 @@ export const getTour = catchAsync(
     });
   }
 );
+export const getMostPopularTours = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const popularTours = await Tour.find()
+      .sort({ ratingsAverage: -1 })
+      .limit(3);
+    if (!popularTours || popularTours.length === 0) {
+      return next(new AppError('There are no tours', 404));
+    }
+    res.status(200).render('home', {
+      title: 'Most Popular Tours',
+      tours: popularTours
+    });
+  }
+);
 export const getLogin = catchAsync(async (req: Request, res: Response) => {
   res.status(200).render('login', {
     title: 'Log into your account'

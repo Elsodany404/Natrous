@@ -6,7 +6,14 @@ import User from '../models/userModel.js';
 import Tour from '../models/tourModel.js';
 import AppError from '../utils/AppError.js';
 import {} from './authController.js';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+let stripe;
+const getStripe = () => {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey)
+        throw new AppError('Stripe is not configured', 503);
+    stripe ??= new Stripe(secretKey);
+    return stripe;
+};
 export const createBooking = handlerFactory.createOne(Booking);
 export const deleteBooking = handlerFactory.deleteOne(Booking);
 export const getAllBookings = handlerFactory.getAll(Booking);
@@ -26,7 +33,7 @@ export const createCheckoutSession = async (req, res) => {
         const baseUrl = process.env.DEV_TUNNEL_URL || `${req.protocol}://${req.get('host')}`;
         if (!tour)
             throw new AppError('There is problem when  allocating tour', 400);
-        const session = await stripe.checkout.sessions.create({
+        const session = await getStripe().checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
             success_url: `${baseUrl}/my-bookings`,
@@ -68,7 +75,7 @@ export const createCheckoutSession = async (req, res) => {
 const createBookingCheckout = async (session) => {
     console.log('Creating booking in the database');
     // Fetch the full session with line items from Stripe
-    const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+    const fullSession = await getStripe().checkout.sessions.retrieve(session.id, {
         expand: ['line_items']
     });
     // Check client_reference_id exists
@@ -91,7 +98,7 @@ export const webhookCheckout = async (req, res) => {
     console.log('✅ Webhook was received successfully');
     const signature = req.headers['stripe-signature'];
     try {
-        const event = stripe.webhooks.constructEvent(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET);
+        const event = getStripe().webhooks.constructEvent(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET);
         console.log('🎉 Mission completed respect!!!!');
         console.log('📦 Event type:', event.type);
         if (event.type === 'checkout.session.completed') {

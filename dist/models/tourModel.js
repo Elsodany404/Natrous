@@ -1,4 +1,6 @@
 import mongoose, { Document, Types } from 'mongoose';
+import slugify from 'slugify';
+const slugifyTourName = slugify;
 const tourSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -111,12 +113,12 @@ tourSchema.virtual('reviews', {
     foreignField: 'tour',
     localField: '_id'
 });
-// tourSchema.pre('save', function (this: ITour, next) {
-//   this.slug = slugify(this.name, {
-//     lower: true
-//   });
-//   next();
-// });
+tourSchema.pre('save', function (next) {
+    if (this.isModified('name')) {
+        this.slug = slugifyTourName(this.name, { lower: true });
+    }
+    next();
+});
 // appling embedding guides
 // tourSchema.pre('save', async function (next) {
 //     const guidesPromises = this.guides.map(

@@ -4,17 +4,17 @@ mixin tabs(link, icon, title, active)
   li(class=`${active ? 'side-nav--active' : ''}`)
     a(href=`${link}`)
       svg
-        use(xlink:href=`img/icons.svg#icon-${icon}`)
+        use(xlink:href=`/img/icons.svg#icon-${icon}`)
       | #{title}
 
 block content
-  main.main
+  main.main.main--profile
     .user-view
       nav.user-view__menu
         if user.role !== 'admin'
           ul.side-nav
             +tabs('#', 'settings', 'Settings', true)
-            +tabs('/my-tours', 'briefcase', 'My bookings')
+            +tabs('#', 'briefcase', 'My bookings')
             +tabs('#', 'star', 'My reviews')
             +tabs('#', 'credit-card', 'Billing')
         else

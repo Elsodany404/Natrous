@@ -8,6 +8,10 @@ viewRouter.route('/login').get(viewController.getLogin);
 viewRouter.route('/sign-up').get(viewController.getSignup);
 viewRouter
   .route('/')
+  .get(authController.isLoggedIn, viewController.getMostPopularTours);
+
+viewRouter
+  .route('/overview')
   .get(authController.isLoggedIn, viewController.getOverview);
 
 viewRouter

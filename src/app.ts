@@ -31,7 +31,15 @@ app.enable('trust proxy');
 if (process.env.NODE_ENV === 'development') app.use(morgan('tiny'));
 
 // Security
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        imgSrc: ["'self'", 'data:', 'https://*.tile.openstreetmap.fr']
+      }
+    }
+  })
+);
 app.use(xss());
 app.use(
   mongoSanitize({
@@ -64,10 +72,13 @@ app.options('*', cors());
 // Static files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, '../../public')));
+app.use('/img/tours', express.static(path.join(__dirname, '../public/tours')));
+app.use('/img/users', express.static(path.join(__dirname, '../public/users')));
+app.use('/img', express.static(path.join(__dirname, '../src/client/img')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 // View engine
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, '../src/views'));
 app.set('view engine', 'pug');
 
 // Compression

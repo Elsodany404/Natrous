@@ -7,7 +7,13 @@ import Tour from '../models/tourModel.js';
 import AppError from '../utils/AppError.js';
 import { type authRequest } from './authController.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+let stripe: Stripe | undefined;
+const getStripe = () => {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) throw new AppError('Stripe is not configured', 503);
+  stripe ??= new Stripe(secretKey);
+  return stripe;
+};
 export const createBooking = handlerFactory.createOne(Booking);
 export const deleteBooking = handlerFactory.deleteOne(Booking);
 export const getAllBookings = handlerFactory.getAll(Booking);
@@ -32,7 +38,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     if (!tour)
       throw new AppError('There is problem when  allocating tour', 400);
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
       success_url: `${baseUrl}/my-bookings`,
@@ -75,7 +81,7 @@ const createBookingCheckout = async (session: StripeSession) => {
   console.log('Creating booking in the database');
 
   // Fetch the full session with line items from Stripe
-  const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+  const fullSession = await getStripe().checkout.sessions.retrieve(session.id, {
     expand: ['line_items']
   });
 
@@ -102,7 +108,7 @@ export const webhookCheckout = async (req: Request, res: Response) => {
   const signature = req.headers['stripe-signature'];
 
   try {
-    const event: Stripe.Event = stripe.webhooks.constructEvent(
+    const event: Stripe.Event = getStripe().webhooks.constructEvent(
       req.body,
       signature!,
       process.env.STRIPE_WEBHOOK_SECRET!

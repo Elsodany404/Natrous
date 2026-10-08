@@ -1,0 +1,129 @@
+.story {
+    width: 75%;
+    margin: 0 auto;
+    box-shadow: 0 3rem 6rem rgba($color-black, .1);
+    background-color: rgba($color-white, .6);
+    border-radius: 3px;
+    padding: 6rem;
+    padding-left: 9rem;
+    font-size: $default-font-size;
+    transform: skewX(-12deg);
+
+    @include respond(tab-port) {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 12rem minmax(0, 1fr);
+        gap: 2.4rem;
+        padding: 3rem;
+        transform: none;
+    }
+
+    @include respond(phone) {
+        grid-template-columns: 8rem minmax(0, 1fr);
+        gap: 1.6rem;
+        padding: 2rem;
+    }
+
+    &__shape {
+        width: 15rem;
+        height: 15rem;
+        float: left;
+        transform: translateX(-3rem) skewX(12deg);
+        position: relative;
+        overflow: hidden;
+        border-radius: 50%;
+
+        @include respond(tab-port) {
+            float: none;
+            width: 12rem;
+            height: 12rem;
+            margin: 0;
+            transform: none;
+        }
+
+        @include respond(phone) {
+            width: 8rem;
+            height: 8rem;
+        }
+
+        @supports (clip-path: polygon(0 0)) or (-webkit-clip-path: polygon(0 0)) {
+            -webkit-clip-path: circle(50% at 50% 50%);
+            clip-path: circle(50% at 50% 50%);
+            -webkit-shape-outside: circle(50% at 50% 50%);
+            shape-outside: circle(50% at 50% 50%);
+            border-radius: none;
+        }
+
+    }
+
+    &__img {
+        height: 100%;
+        transform: translateX(-4rem) scale(1.4);
+        backface-visibility: hidden;
+        transition: all .5s;
+
+        @include respond(tab-port) {
+            width: 100%;
+            object-fit: cover;
+            transform: none;
+        }
+    }
+
+    &__text {
+        transform: skewX(12deg);
+
+        @include respond(tab-port) {
+            min-width: 0;
+            transform: none;
+        }
+    }
+
+    &__author {
+        display: none;
+        margin: 0 0 1rem;
+        color: $color-primary-dark;
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: .1rem;
+        text-transform: uppercase;
+
+        @include respond(tab-port) {
+            display: block;
+        }
+    }
+
+    &__caption {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, 20%);
+        color: $color-white;
+        text-transform: uppercase;
+        font-size: 1.7rem;
+        text-align: center;
+        opacity: 0;
+        transition: all .5s;
+        backface-visibility: hidden;
+
+        @include respond(tab-port) {
+            display: none;
+        }
+    }
+
+    &:hover &__caption {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+
+    &:hover &__img {
+        transform: translateX(-4rem) scale(1);
+        filter: blur(3px) brightness(80%);
+    }
+
+    @include respond(tab-port) {
+        &:hover &__img {
+            transform: none;
+            filter: none;
+        }
+    }
+}

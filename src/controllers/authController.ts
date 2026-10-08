@@ -53,8 +53,12 @@ export const signUp = catchAsync(async (req: Request, res: Response) => {
     password,
     passwordConfirm
   });
-  const mailObj = new Email(user, 'http://127.0.0.1:3000/me');
-  await mailObj.sendWelcome();
+  try {
+    const mailObj = new Email(user, `${req.protocol}://${req.get('host')}/me`);
+    await mailObj.sendWelcome();
+  } catch (err: unknown) {
+    console.error('Welcome email could not be sent:', err);
+  }
   createSendToken(user, req, 200, res);
 });
 export const login = catchAsync(
@@ -73,6 +77,15 @@ export const login = catchAsync(
       !(await (user as any).correctPassword(password, user.password))
     ) {
       return next(new AppError('Incorrect email or password', 401));
+    }
+    try {
+      const mailObj = new Email(
+        user,
+        `${req.protocol}://${req.get('host')}/me`
+      );
+      await mailObj.sendSignInNotice();
+    } catch (err: unknown) {
+      console.error('Sign-in notification could not be sent:', err);
     }
     // sending token
     createSendToken(user, req, 200, res);
