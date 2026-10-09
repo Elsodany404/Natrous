@@ -1,6 +1,7 @@
 import express from 'express';
 import * as viewController from '../controllers/viewController.js';
 import * as authController from '../controllers/authController.js';
+import * as bookingController from '../controllers/bookingController.js';
 
 const viewRouter = express.Router();
 
@@ -21,4 +22,8 @@ export default viewRouter;
 viewRouter.route('/me').get(authController.protect, viewController.getProfile);
 viewRouter
   .route('/my-bookings')
-  .get(authController.protect, viewController.getMyBookings);
+  .get(
+    authController.protect,
+    bookingController.createBookingCheckout,
+    viewController.getMyBookings
+  );

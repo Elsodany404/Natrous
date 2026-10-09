@@ -5,6 +5,7 @@ import Booking from '../models/bookingModel.js';
 import User from '../models/userModel.js';
 import Tour from '../models/tourModel.js';
 import AppError from '../utils/AppError.js';
+import catchAsync from '../utils/catchAsync.js';
 import {} from './authController.js';
 let stripe;
 const getStripe = () => {
@@ -23,23 +24,22 @@ export const createCheckoutSession = async (req, res) => {
     try {
         const { tourID } = req.params;
         if (!tourID) {
-            // This should never happen if your route is correct,
-            // but TS needs the check to know it's a string
             throw new AppError('Tour ID is missing', 400);
         }
         const tour = await Tour.findById(tourID);
         if (!tour)
             throw new AppError('Tour not found', 404);
-        const baseUrl = process.env.DEV_TUNNEL_URL || `${req.protocol}://${req.get('host')}`;
-        if (!tour)
-            throw new AppError('There is problem when  allocating tour', 400);
+        const baseUrl = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
+        const { user } = req;
         const session = await getStripe().checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
-            success_url: `${baseUrl}/my-bookings`,
+            // Stripe replaces {CHECKOUT_SESSION_ID} with the real session id
+            success_url: `${baseUrl}/my-bookings?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${baseUrl}/tour/${tour.slug}`,
-            customer_email: req.user.email,
+            customer_email: user.email,
             client_reference_id: tourID,
+            metadata: { tourID, userID: String(user.id) },
             line_items: [
                 {
                     price_data: {
@@ -49,70 +49,85 @@ export const createCheckoutSession = async (req, res) => {
                             ...(tour.summary && { description: tour.summary }),
                             images: [`${baseUrl}/img/tours/${tour.imageCover}`]
                         },
-                        unit_amount: tour.price * 100
+                        unit_amount: Math.round(tour.price * 100)
                     },
                     quantity: 1
                 }
             ]
         });
-        // Return the URL directly
         res.status(200).json({ status: 'success', url: session.url });
     }
     catch (error) {
-        if (error instanceof Error) {
-            console.log('ERROR 💥', error.message);
-            console.log('STACK 🧩', error.stack);
-            res.status(500).json({ status: 'error', message: error.message });
-        }
-        else {
-            console.log('UNKNOWN ERROR 💥', error);
-            res
-                .status(500)
-                .json({ status: 'error', message: 'Something went wrong' });
-        }
+        const statusCode = error instanceof AppError ? error.statusCode : 500;
+        const message = error instanceof Error ? error.message : 'Something went wrong';
+        console.error('ERROR 💥', error);
+        res.status(statusCode).json({ status: 'error', message });
     }
 };
-const createBookingCheckout = async (session) => {
-    console.log('Creating booking in the database');
-    // Fetch the full session with line items from Stripe
-    const fullSession = await getStripe().checkout.sessions.retrieve(session.id, {
-        expand: ['line_items']
-    });
-    // Check client_reference_id exists
-    const tour = fullSession.client_reference_id;
+// Creates the booking for a paid checkout session. Safe to call more than
+// once for the same session (webhook + success redirect).
+const createBookingFromSession = async (sessionId) => {
+    const existing = await Booking.findOne({ stripeSessionId: sessionId });
+    if (existing)
+        return existing;
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    if (session.payment_status !== 'paid')
+        throw new AppError('Payment has not been completed', 400);
+    const tour = session.metadata?.tourID ?? session.client_reference_id;
     if (!tour)
         throw new AppError('Tour reference missing from session', 400);
-    // Find user
-    const user = await User.findOne({ email: fullSession.customer_email });
-    if (!user)
-        throw new AppError('User not found', 400);
-    // Make sure line items exist
-    const lineItem = fullSession.line_items?.data[0];
-    if (!lineItem || !lineItem.price?.unit_amount)
-        throw new AppError('Problem with line items in session', 400);
-    const price = lineItem.price.unit_amount / 100;
-    await Booking.create({ tour, user, price });
-    console.log('✅ Booking was created');
-};
-export const webhookCheckout = async (req, res) => {
-    console.log('✅ Webhook was received successfully');
-    const signature = req.headers['stripe-signature'];
+    let user = session.metadata?.userID;
+    if (!user) {
+        const userDoc = await User.findOne({ email: session.customer_email });
+        if (!userDoc)
+            throw new AppError('User not found', 400);
+        user = userDoc.id;
+    }
+    if (session.amount_total == null)
+        throw new AppError('Problem with session amount', 400);
+    const price = session.amount_total / 100;
     try {
-        const event = getStripe().webhooks.constructEvent(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET);
-        console.log('🎉 Mission completed respect!!!!');
-        console.log('📦 Event type:', event.type);
+        return await Booking.create({
+            tour,
+            user,
+            price,
+            stripeSessionId: sessionId
+        });
+    }
+    catch (err) {
+        // Duplicate key: the other path created it at the same time
+        if (err.code === 11000)
+            return Booking.findOne({ stripeSessionId: sessionId });
+        throw err;
+    }
+};
+// Runs on /my-bookings?session_id=... after Stripe redirects back
+export const createBookingCheckout = catchAsync(async (req, res, next) => {
+    const sessionId = req.query.session_id;
+    if (typeof sessionId !== 'string' || !sessionId)
+        return next();
+    const booking = await createBookingFromSession(sessionId);
+    if (booking &&
+        String(booking.user) !== String(req.user.id))
+        return next(new AppError('This booking belongs to another user', 403));
+    // Drop the query string so a refresh doesn't hit Stripe again
+    res.redirect(req.originalUrl.split('?')[0] ?? '/my-bookings');
+});
+export const webhookCheckout = async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_KEY;
+    if (!webhookSecret || typeof signature !== 'string')
+        return res.status(400).send('Webhook not configured');
+    try {
+        const event = getStripe().webhooks.constructEvent(req.body, signature, webhookSecret);
         if (event.type === 'checkout.session.completed') {
-            await createBookingCheckout(event.data.object);
+            await createBookingFromSession(event.data.object.id);
         }
     }
     catch (err) {
-        if (err instanceof Error) {
-            console.error('❌ Stripe webhook error:', err.message);
-            return res.status(400).send(`Webhook error: ${err.message}`);
-        }
-        else {
-            console.error('unexpected error occurred');
-        }
+        const message = err instanceof Error ? err.message : 'unexpected error';
+        console.error('❌ Stripe webhook error:', message);
+        return res.status(400).send(`Webhook error: ${message}`);
     }
     res.status(200).json({ received: true });
 };

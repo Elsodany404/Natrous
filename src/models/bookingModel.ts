@@ -6,6 +6,7 @@ export interface IBooking extends Document {
   user: Types.ObjectId;
   price: number;
   paid: boolean;
+  stripeSessionId?: string;
   createdAt: Date;
 }
 const bookingSchema = new mongoose.Schema<IBooking>({
@@ -26,6 +27,11 @@ const bookingSchema = new mongoose.Schema<IBooking>({
   paid: {
     type: Boolean,
     default: true
+  },
+  stripeSessionId: {
+    type: String,
+    unique: true,
+    sparse: true
   },
   createdAt: {
     type: Date,

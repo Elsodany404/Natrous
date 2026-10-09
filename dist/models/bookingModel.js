@@ -18,6 +18,11 @@ const bookingSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    stripeSessionId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
     createdAt: {
         type: Date,
         default: Date.now()

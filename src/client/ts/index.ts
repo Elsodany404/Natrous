@@ -3,6 +3,7 @@ import { login, logout, signup } from './login-signup';
 import { createMap } from './leaflet';
 import { updateData, updatePassword } from './updateData';
 import toPaymentGateway from './payment';
+// @ts-expect-error SCSS is handled by the bundler and has no TypeScript declarations.
 import '../sass/app.scss';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -46,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const direction = control.dataset.reviewDirection === 'next' ? 1 : -1;
         reviewsEl.scrollBy({
           left: direction * (firstCard.getBoundingClientRect().width + cardGap),
-          behavior: 'smooth',
+          behavior: 'smooth'
         });
       });
     });
