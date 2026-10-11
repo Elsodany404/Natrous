@@ -1,7 +1,5 @@
 // server.js
 import dotenv from 'dotenv';
-import fs from 'fs';
-import https from 'https';
 import mongoose from 'mongoose';
 dotenv.config({
     path: ['./config.env', './.env', './atlas-credentials.env']
@@ -29,17 +27,7 @@ catch (err) {
         console.error(':( Database unavailable; starting without database:', err);
     }
 }
-if (isDevelopment) {
-    app.listen(3000, () => {
-        console.log('HTTP Server running on http://localhost:3000');
-    });
-}
-else {
-    const options = {
-        key: fs.readFileSync('cert/server.key'),
-        cert: fs.readFileSync('cert/server.cert')
-    };
-    https.createServer(options, app).listen(3000, () => {
-        console.log('HTTPS Server running on https://localhost:3000');
-    });
-}
+const port = Number(process.env.PORT) || 3000;
+app.listen(port, () => {
+    console.log(`HTTP Server running on port ${port}`);
+});
