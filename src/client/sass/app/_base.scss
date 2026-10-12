@@ -110,3 +110,40 @@ body {
   background-color: #eb4d4b;
 }
 
+
+// RESPONSIVE
+@media only screen and (max-width: 75em) {
+  html {
+    font-size: 56.25%; // 1rem = 9px
+  }
+
+  .main {
+    padding: 6rem 4rem;
+  }
+}
+
+@media only screen and (max-width: 56.25em) {
+  html {
+    font-size: 50%; // 1rem = 8px
+  }
+
+  body {
+    padding: 0;
+  }
+
+  .line {
+    margin: 4rem 0;
+  }
+
+  .alert {
+    width: max-content;
+    max-width: 90%;
+    padding: 1.6rem 4rem;
+  }
+}
+
+@media only screen and (max-width: 37.5em) {
+  .main {
+    padding: 4rem 2rem;
+  }
+}

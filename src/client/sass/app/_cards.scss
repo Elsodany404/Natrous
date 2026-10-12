@@ -134,3 +134,32 @@
   -ms-flex-item-align: center;
   align-self: center;
 }
+
+@media only screen and (max-width: 75em) {
+  .card-container {
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 5rem;
+  }
+}
+
+@media only screen and (max-width: 56.25em) {
+  .card-container {
+    grid-template-columns: 1fr;
+    max-width: 55rem;
+  }
+}
+
+@media only screen and (max-width: 37.5em) {
+  .card-container {
+    grid-gap: 4rem;
+  }
+
+  .card__details,
+  .card__footer {
+    padding: 2.5rem 2rem;
+  }
+
+  .empty-bookings {
+    padding: 3rem 2rem;
+  }
+}

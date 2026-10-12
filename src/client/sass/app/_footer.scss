@@ -58,3 +58,22 @@
   }
 }
 
+
+@media only screen and (max-width: 37.5em) {
+  .footer {
+    padding: 5rem 2rem 3rem;
+  }
+
+  .footer__nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .footer__nav li {
+    margin: 0 0.75rem 0.5rem;
+  }
+
+  .footer__copyright {
+    text-align: center;
+  }
+}

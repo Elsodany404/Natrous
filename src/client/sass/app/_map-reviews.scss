@@ -216,3 +216,28 @@
 .reviews__star--inactive {
   fill: #bbb;
 }
+
+@media only screen and (max-width: 56.25em) {
+  .section-map {
+    height: 50rem;
+  }
+}
+
+@media only screen and (max-width: 37.5em) {
+  .section-map {
+    height: 40rem;
+  }
+
+  .reviews {
+    grid-column-gap: 3rem;
+  }
+
+  .reviews__card {
+    width: 28rem;
+    padding: 3rem;
+  }
+
+  .reviews__controls {
+    padding: 0 2rem;
+  }
+}

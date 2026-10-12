@@ -56,3 +56,50 @@
   border-bottom: 1px solid currentColor;
 }
 
+
+// Horizontal tabs when the sidebar stacks above the content
+@media only screen and (max-width: 56.25em) {
+  .side-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .side-nav li,
+  .side-nav--active,
+  .side-nav li:hover {
+    margin: 0;
+    border-left: 0 !important;
+    border-bottom: 3px solid transparent;
+  }
+
+  .side-nav--active,
+  .side-nav li:hover {
+    border-bottom-color: #fff;
+  }
+
+  .side-nav--active a,
+  .side-nav a:hover,
+  .side-nav a:active {
+    transform: none;
+  }
+
+  .side-nav a:link,
+  .side-nav a:visited {
+    padding: 1rem 2rem;
+    font-size: 1.4rem;
+  }
+
+  .side-nav svg {
+    margin-right: 1rem;
+  }
+
+  .admin-nav {
+    margin-top: 0;
+  }
+
+  .admin-nav__heading {
+    margin: 0 2rem 1.5rem;
+    text-align: center;
+  }
+}
