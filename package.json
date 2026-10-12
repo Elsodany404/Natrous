@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "NODE_ENV=development nodemon --watch src --ext ts,pug,css,scss --exec \"npm run build && node dist/server.js\"",
-    "build": "tsc && parcel build src/client/ts/index.ts --dist-dir public --no-cache && parcel build src/client/sass/main.scss --dist-dir public --no-cache"    "lint": "eslint .",
+    "build": "tsc && parcel build src/client/ts/index.ts --dist-dir public --no-cache && parcel build src/client/sass/main.scss --dist-dir public --no-cache",
+    "lint": "eslint .",
     "format": "prettier --write .",
     "clear": "rm -rf dist .parcel-cache && find public -maxdepth 1 -type f -delete"
   },
