@@ -1,4 +1,4 @@
-import { type Request, type Response } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import AppError from '../utils/AppError.js';
 
 const handleJWTVerification = () => new AppError('Invalid token', 404);
@@ -79,7 +79,13 @@ const sendDevError = (err: AppErrorType, req: Request, res: Response) => {
   }
 };
 
-const globalErrorHandler = (err: AppErrorType, req: Request, res: Response) => {
+const globalErrorHandler = (
+  err: AppErrorType,
+  req: Request,
+  res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _next: NextFunction
+) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
