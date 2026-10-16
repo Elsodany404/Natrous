@@ -61,6 +61,50 @@ export const signup = async (
     }
   }
 };
+export const forgotPassword = async (email: string) => {
+  try {
+    const res = await axios.post('/api/v1/users/forgot-password', { email });
+    if (res.status === 200) {
+      showAlert('success', 'Password reset link sent to your email');
+    }
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      showAlert('error', err.response?.data.message || err.message);
+    } else {
+      showAlert('error', 'unexpected error');
+    }
+  }
+};
+export const resetPassword = async (
+  token: string,
+  password: string,
+  passwordConfirm: string
+) => {
+  try {
+    const res = await axios.patch(
+      `/api/v1/users/reset-password/${encodeURIComponent(token)}`,
+      {
+        password,
+        passwordConfirm
+      },
+      {
+        withCredentials: true
+      }
+    );
+    if (res.status === 200) {
+      showAlert('success', 'Password reset successfully');
+      window.setTimeout(() => {
+        location.assign('/');
+      }, 1500);
+    }
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      showAlert('error', err.response?.data.message || err.message);
+    } else {
+      showAlert('error', 'unexpected error');
+    }
+  }
+};
 export const logout = async () => {
   try {
     const res = await axios.post('/api/v1/users/logout');

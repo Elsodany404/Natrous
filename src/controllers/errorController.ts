@@ -1,8 +1,10 @@
-import { type Request, type Response } from 'express';
+import { type NextFunction, type Request, type Response } from 'express';
 import AppError from '../utils/AppError.js';
 
-const handleJWTVerification = () => new AppError('Invalid token', 404);
-const handleExpiredJWT = () => new AppError('jwt expired', 404);
+const handleJWTVerification = () =>
+  new AppError('Invalid token. Please log in again.', 401);
+const handleExpiredJWT = () =>
+  new AppError('Your session has expired. Please log in again.', 401);
 
 interface AppErrorType extends Error {
   statusCode: number;
@@ -11,11 +13,12 @@ interface AppErrorType extends Error {
   code?: number;
   path?: string;
   value?: string;
+  expose?: boolean;
   errors?: Record<string, { message: string }>;
 }
 const handleValidationError = (err: AppErrorType) => {
   const { errors } = err;
-  if (!errors) throw new AppError('there is problem finding exact error', 400);
+  if (!errors) return new AppError(err.message, 400);
   const errorMessages: string[] = [];
   Object.values(errors).forEach((obj) => {
     errorMessages.push(obj.message);
@@ -42,9 +45,10 @@ const sendProdError = (err: AppErrorType, req: Request, res: Response) => {
         isOperational: true
       });
     } else {
+      console.error('ERROR 💥', err);
       return res.status(500).json({
         status: 'error',
-        message: 'somthing went wrong'
+        message: 'Something went wrong!'
       });
     }
   } else {
@@ -75,19 +79,29 @@ const sendDevError = (err: AppErrorType, req: Request, res: Response) => {
     console.error('ERROR 💥', err);
     return res
       .status(err.statusCode)
-      .render('error', { title: 'Somthing went wrong', msg: err.message });
+      .render('error', { title: 'Something went wrong!', msg: err.message });
   }
 };
 
-const globalErrorHandler = (err: AppErrorType, req: Request, res: Response) => {
+// Express only treats middleware with exactly four parameters as an error
+// handler, so `next` must stay in the signature.
+const globalErrorHandler = (
+  err: AppErrorType,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  // The response is already streaming: let Express close the connection
+  if (res.headersSent) return next(err);
+
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
     sendDevError(err, req, res);
-  } else if (process.env.NODE_ENV === 'production') {
-    let error = Object.create(Object.getPrototypeOf(err));
-    Object.assign(error, err);
+  } else {
+    // Any other NODE_ENV (production, unset, ...) gets the safe production output
+    let error = err;
     if (err.name === 'CastError') error = handleCastError(err);
     if (err.code === 11000) error = handleDuplicateKeyError(err);
     if (err.name === 'ValidationError') {
@@ -98,6 +112,10 @@ const globalErrorHandler = (err: AppErrorType, req: Request, res: Response) => {
     }
     if (err.name === 'TokenExpiredError') {
       error = handleExpiredJWT();
+    }
+    // Client errors raised by body-parser etc. (bad JSON, payload too large)
+    if (!err.isOperational && err.expose && err.statusCode < 500) {
+      error = new AppError(err.message, err.statusCode);
     }
     sendProdError(error, req, res);
   }

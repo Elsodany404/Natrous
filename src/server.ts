@@ -26,7 +26,8 @@ try {
 } catch (err: unknown) {
   if (!isDevelopment) {
     console.error(':( DB connection failed:', err);
-    process.exitCode = 1;
+    // Don't start serving requests without a database outside development
+    process.exit(1);
   } else {
     console.error(':( Database unavailable; starting without database:', err);
   }

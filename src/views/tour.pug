@@ -11,7 +11,7 @@ mixin facts(icon, label, text)
 mixin guideInfo(name, role, photo)
   - if(role === 'guide') role = 'Tour-Guide'
   .overview-box__detail
-    img.overview-box__img(src=`/img/users/${photo}`, alt=`${role}`)
+    img.overview-box__img(src=`/img/users/${photo || 'default.jpg'}`, alt=`${role}`)
     span.overview-box__label= role
     span.overview-box__text= name
 
@@ -50,8 +50,8 @@ block content
     .description-box
       h2.heading-secondary.ma-bt-lg= `About the ${tour.name}`
       - const paragraphs = tour.description.split('\n');
-      p.description__text= paragraphs[0]
-      p.description__text= paragraphs[1]
+      each paragraph in paragraphs
+        p.description__text= paragraph
   section.section-pictures
     each img, i in tour.images
       .picture-box
@@ -82,4 +82,4 @@ block content
         if (user)
           button.btn.btn--green.span-all-rows#bookingBtn(data-tour-id=`${tour.id}`) Book tour now!
         else 
-          a.btn.btn--green.span-all-rows Login to book tour
+          a.btn.btn--green.span-all-rows(href='/login') Login to book tour

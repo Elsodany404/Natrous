@@ -8,7 +8,7 @@ block content
 					.card__header
 						.card__picture
 							.card__picture-overlay &nbsp;
-							img.card__picture-img(src=`/img/tours/${tour.imageCover}`, alt='Tour 1')
+							img.card__picture-img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
 						h3.heading-tertirary
 							span=  tour.name
 
@@ -22,7 +22,7 @@ block content
 						.card__data
 							svg.card__icon
 								use(xlink:href='/img/icons.svg#icon-calendar')
-							span= tour.startDates[0].toLocaleString('en-us', {month: "long", day: "numeric"})
+							span= tour.startDates.length ? tour.startDates[0].toLocaleString('en-us', {month: "long", day: "numeric"}) : 'Coming soon'
 						.card__data
 							svg.card__icon
 								use(xlink:href='/img/icons.svg#icon-flag')
@@ -37,7 +37,7 @@ block content
 							span.card__footer-value= `$${tour.price}`
 							span.card__footer-text per person
 						p.card__ratings
-							span.card__footer-value= tour.ratingsAverage
+							span.card__footer-value= tour.ratingAverage
 							span.card__footer-text= `rating (${tour.ratingsQuantity})`
 						a.btn.btn--green.btn--small(href=`/tour/${tour.slug}`) Details
 			else

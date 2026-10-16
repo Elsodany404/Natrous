@@ -13,8 +13,8 @@ block content
       nav.user-view__menu
         if user.role !== 'admin'
           ul.side-nav
-            +tabs('#', 'settings', 'Settings', true)
-            +tabs('#', 'briefcase', 'My bookings')
+            +tabs('/me', 'settings', 'Settings', true)
+            +tabs('/my-bookings', 'briefcase', 'My bookings')
             +tabs('#', 'star', 'My reviews')
             +tabs('#', 'credit-card', 'Billing')
         else
@@ -36,7 +36,7 @@ block content
               label.form__label(for='email') Email address
               input#email.form__input(type='email', value=`${user.email}`, required)
             .form__group.form__photo-upload
-              img.form__user-photo(src=`/img/users/${user.photo}`, alt='User photo')
+              img.form__user-photo(src=`/img/users/${user.photo || 'default.jpg'}`, alt='User photo')
               input.form__upload(type='file', accept='image/*', id='photo', name='photo')
               label(for='photo') Choose new photo
             button.btn.btn--small.btn--green(type='submit') Save settings

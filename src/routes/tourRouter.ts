@@ -1,4 +1,5 @@
 import express from 'express';
+import * as authController from '../controllers/authController.js';
 import * as tourController from '../controllers/tourController.js';
 import reviewRouter from './reviewRouter.js';
 
@@ -15,23 +16,31 @@ tourRouter
   .route('/top-5-cheap')
   .get(tourController.getTopCheapTours, tourController.getAllTours);
 
-// // MODIFING TOURS
-// tourRouter.use(authController.protect);
-// tourRouter.use(authController.roleRestrictions('admin', 'guide'));
-
+// Reading tours is public; creating, modifying and deleting them is
+// restricted to admins and lead guides
 tourRouter
   .route('/')
   .get(tourController.getAllTours)
-  .post(tourController.createTour);
+  .post(
+    authController.protect,
+    authController.roleRestrictions('admin', 'lead-guide'),
+    tourController.createTour
+  );
 
 tourRouter
   .route('/:id')
   .get(tourController.getTour)
   .patch(
+    authController.protect,
+    authController.roleRestrictions('admin', 'lead-guide'),
     tourController.uploadPhoto,
     tourController.processPhoto,
     tourController.updateTour
   )
-  .delete(tourController.deleteTour);
+  .delete(
+    authController.protect,
+    authController.roleRestrictions('admin', 'lead-guide'),
+    tourController.deleteTour
+  );
 
 export default tourRouter;

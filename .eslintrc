@@ -29,7 +29,11 @@
     "operator-linebreak": "off",
     "import/first": "off",
     "comma-dangle": ["error", "never"],
-    "quotes": ["error", "single", { "allowTemplateLiterals": true }],
+    "quotes": [
+      "error",
+      "single",
+      { "allowTemplateLiterals": true, "avoidEscape": true }
+    ],
     "import/extensions": [
       "error",
       "ignorePackages",

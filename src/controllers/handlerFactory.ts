@@ -50,8 +50,9 @@ export const updateOne = <T extends Document>(model: Model<T>) => {
 // Generic get all
 export const getAll = <T extends Document>(model: Model<T>) => {
   return catchAsync(async (req: Request, res: Response) => {
+    // Nested route GET /tours/:tourId/reviews: only that tour's reviews
     let filter = {};
-    if ((req as any).tourId) filter = { _id: (req as any).tourId };
+    if (req.params.tourId) filter = { tour: req.params.tourId };
 
     const queryParams = (req as any).customQuery || req.query;
     const features = new APIFeatures(model, model.find(filter), queryParams)

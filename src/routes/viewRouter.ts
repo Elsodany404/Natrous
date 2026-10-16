@@ -5,8 +5,18 @@ import * as bookingController from '../controllers/bookingController.js';
 
 const viewRouter = express.Router();
 
-viewRouter.route('/login').get(viewController.getLogin);
-viewRouter.route('/sign-up').get(viewController.getSignup);
+viewRouter
+  .route('/login')
+  .get(authController.isLoggedIn, viewController.getLogin);
+viewRouter
+  .route('/sign-up')
+  .get(authController.isLoggedIn, viewController.getSignup);
+viewRouter
+  .route('/forgot-password')
+  .get(authController.isLoggedIn, viewController.getForgotPassword);
+viewRouter
+  .route('/reset-password/:token')
+  .get(authController.isLoggedIn, viewController.getResetPassword);
 viewRouter
   .route('/')
   .get(authController.isLoggedIn, viewController.getMostPopularTours);
@@ -18,7 +28,6 @@ viewRouter
 viewRouter
   .route('/tour/:slug')
   .get(authController.isLoggedIn, viewController.getTour);
-export default viewRouter;
 viewRouter.route('/me').get(authController.protect, viewController.getProfile);
 viewRouter
   .route('/my-bookings')
@@ -27,3 +36,4 @@ viewRouter
     bookingController.createBookingCheckout,
     viewController.getMyBookings
   );
+export default viewRouter;

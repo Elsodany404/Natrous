@@ -26,35 +26,41 @@ export const uploadPhoto = multer({ storage, fileFilter }).fields([
 ]);
 export const processPhoto = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.files || !(req as any).files['imageCover'][0]) return next();
+    const files = req.files as
+      | { [fieldname: string]: Express.Multer.File[] }
+      | undefined;
+    const coverFile = files?.['imageCover']?.[0];
+    const imageFiles = files?.['images'] ?? [];
+    if (!coverFile && imageFiles.length === 0) return next();
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-    const filename = `tour-${Date.now()}-cover${path.extname((req as any).files['imageCover'][0].originalname)}`;
-    const saveTo = path.resolve(__dirname, '../public/img/tours');
-    const filePath = path.join(saveTo, filename);
-    await sharp((req as any).files['imageCover'][0].buffer)
-      .resize({ width: 2000, height: 1333 })
-      .jpeg({ quality: 90 })
-      .toFile(filePath);
-    const imageCover = filename;
-    const images: string[] = [];
-    await Promise.all(
-      (req as any).files['images'].map(
-        async (file: Express.Multer.File, i: number) => {
-          const name = `tour-${Date.now()}-${i + 1}${path.extname(file.originalname)}`;
-          const loc = path.resolve(__dirname, '../public/img/tours');
-          const pathToFile = path.join(loc, name);
+    // dist/controllers -> <project>/public/tours, served at /img/tours (app.ts)
+    const saveTo = path.resolve(__dirname, '../../public/tours');
+    // Images are always converted to JPEG, so the extension is fixed
+    const prefix = `tour-${req.params.id}-${Date.now()}`;
+
+    if (coverFile) {
+      const imageCover = `${prefix}-cover.jpeg`;
+      await sharp(coverFile.buffer)
+        .resize({ width: 2000, height: 1333 })
+        .jpeg({ quality: 90 })
+        .toFile(path.join(saveTo, imageCover));
+      req.body.imageCover = imageCover;
+    }
+
+    if (imageFiles.length > 0) {
+      req.body.images = await Promise.all(
+        imageFiles.map(async (file, i) => {
+          const name = `${prefix}-${i + 1}.jpeg`;
           await sharp(file.buffer)
             .resize({ width: 2000, height: 1333 })
             .jpeg({ quality: 90 })
-            .toFile(pathToFile);
-          images.push(filename);
-        }
-      )
-    );
-    req.body.imageCover = imageCover;
-    req.body.images = images;
+            .toFile(path.join(saveTo, name));
+          return name;
+        })
+      );
+    }
     next();
   }
 );
@@ -65,7 +71,7 @@ export const getTopCheapTours = (
 ) => {
   (req as any).customQuery = {
     limit: 5,
-    sort: 'ratingAverage,price'
+    sort: '-ratingAverage,price'
   };
   next();
 };
@@ -171,60 +177,65 @@ export const searchTourWithin = catchAsync(
     });
   }
 );
-export const monthlyPlan = catchAsync(async (req: Request, res: Response) => {
-  const { year } = req.params;
-  const cursor = await Tour.aggregate([
-    {
-      $unwind: '$startDates'
-    },
-    {
-      $match: {
-        startDates: {
-          $gte: new Date(`${year}-01-01`),
-          $lte: new Date(`${year}-12-31`)
+export const monthlyPlan = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const year = Number(req.params.year);
+    if (!Number.isInteger(year)) {
+      return next(new AppError('Please provide a valid year', 400));
+    }
+    const cursor = await Tour.aggregate([
+      {
+        $unwind: '$startDates'
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lt: new Date(`${year + 1}-01-01`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $month: '$startDates'
+          },
+          tours: {
+            $push: '$name'
+          },
+          numToursStart: {
+            $sum: 1
+          }
+        }
+      },
+      {
+        $sort: {
+          numToursStart: -1
+        }
+      },
+      {
+        $limit: 12
+      },
+      {
+        $addFields: {
+          month: '$_id'
+        }
+      },
+      {
+        $project: {
+          _id: 0
         }
       }
-    },
-    {
-      $group: {
-        _id: {
-          $month: '$startDates'
-        },
-        tours: {
-          $push: '$name'
-        },
-        numToursStart: {
-          $sum: 1
-        }
+    ]);
+    res.status(200).json({
+      status: 'success',
+      results: cursor.length,
+      data: {
+        cursor
       }
-    },
-    {
-      $limit: 12
-    },
-    {
-      $sort: {
-        numToursStarts: -1
-      }
-    },
-    {
-      $addFields: {
-        month: '$_id'
-      }
-    },
-    {
-      $project: {
-        _id: 0
-      }
-    }
-  ]);
-  res.status(200).json({
-    status: 'success',
-    results: cursor.length,
-    data: {
-      cursor
-    }
-  });
-});
+    });
+  }
+);
 export const groupByDifficulty = catchAsync(
   async (req: Request, res: Response) => {
     const cursor = await Tour.aggregate([
@@ -247,7 +258,7 @@ export const groupByDifficulty = catchAsync(
             $sum: '$ratingsQuantity'
           },
           avgRating: {
-            $avg: '$ratingsAverage'
+            $avg: '$ratingAverage'
           },
           avgPrice: {
             $avg: '$price'

@@ -156,6 +156,8 @@ export const isLoggedIn = async (
   } else if (req.cookies && req.cookies.jwt) {
     token = req.cookies.jwt;
   }
+  // ✅ 2. No token: the visitor simply isn't logged in
+  if (!token) return next();
   try {
     if (!process.env.JWT_SECRET_KEY) {
       throw new Error('JWT secret not defined');
@@ -164,18 +166,13 @@ export const isLoggedIn = async (
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY) as JwtPayload;
 
     const currentUser: IUser | null = await User.findById(decoded.id);
-    // ✅ 5. Check if user changed password after token issued
+    // ✅ 5. Unknown user or password changed after token issued: treat the
+    // visitor as logged out instead of showing an error on every page
     if (
-      decoded.iat &&
-      currentUser &&
-      currentUser.checkPasswordChanged(decoded.iat)
+      !currentUser ||
+      (decoded.iat && currentUser.checkPasswordChanged(decoded.iat))
     ) {
-      return next(
-        new AppError(
-          'User recently changed password! Please log in again.',
-          401
-        )
-      );
+      return next();
     }
     (req as authRequest).user = currentUser;
     res.locals.user = currentUser;
@@ -215,8 +212,8 @@ export const forgotPassword = catchAsync(
     await user.save({
       validateBeforeSave: false
     }); // turn off validation of all props
-    // sending email with reset token
-    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
+    // sending email with a link to the reset password page
+    const resetURL = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
     // if there is any error of the block itself
     try {
       const mailObj = new Email(user, resetURL);
@@ -246,7 +243,7 @@ export const forgotPassword = catchAsync(
 );
 export const resetPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.body) {
+    if (!req.body?.password || !req.body?.passwordConfirm) {
       return next(
         new AppError('please provide new password and confirm it!', 400)
       );
@@ -290,6 +287,14 @@ export const updateUserPassword = catchAsync(
 
     // check for user existant
     const { oldPassword, newPassword, newPasswordConfirm } = req.body;
+    if (!oldPassword || !newPassword || !newPasswordConfirm) {
+      return next(
+        new AppError(
+          'Please provide your current password, a new password and its confirmation',
+          400
+        )
+      );
+    }
     const user = await User.findById((req as authRequest).user.id).select(
       '+password'
     );

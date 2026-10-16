@@ -4,6 +4,16 @@ import * as authController from '../controllers/authController.js';
 
 const bookingRouter = express.Router({ mergeParams: true });
 
+// Every booking route requires a logged-in user
+bookingRouter.use(authController.protect);
+
+bookingRouter
+  .route('/checkout-session/:tourID')
+  .get(bookingController.createCheckoutSession);
+
+// Managing bookings directly is restricted to admins and lead guides
+bookingRouter.use(authController.roleRestrictions('admin', 'lead-guide'));
+
 bookingRouter
   .route('/')
   .get(bookingController.getAllBookings)
@@ -13,7 +23,4 @@ bookingRouter
   .get(bookingController.getBooking)
   .patch(bookingController.updateBooking)
   .delete(bookingController.deleteBooking);
-bookingRouter
-  .route('/checkout-session/:tourID')
-  .get(authController.protect, bookingController.createCheckoutSession);
 export default bookingRouter;

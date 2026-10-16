@@ -59,9 +59,14 @@ const tourSchema = new mongoose.Schema<ITour>(
       type: Number,
       default: 4.5,
       min: [1, 'rating must be at least 1 star'],
-      max: [5, 'rating must be at most 5 stars']
+      max: [5, 'rating must be at most 5 stars'],
+      // 4.666666 -> 4.7
+      set: (val: number) => Math.round(val * 10) / 10
     },
-    ratingsQuantity: Number,
+    ratingsQuantity: {
+      type: Number,
+      default: 0
+    },
     duration: {
       type: Number,
       required: [true, 'A tour must have duration']
@@ -97,7 +102,7 @@ const tourSchema = new mongoose.Schema<ITour>(
     createdAt: {
       type: Date,
       select: false,
-      default: Date.now()
+      default: Date.now // do NOT call Date.now()
     },
     secretTour: {
       type: Boolean,
@@ -172,7 +177,10 @@ tourSchema.pre('save', function (this: ITour, next) {
 //     this.guides = await Promise.all(guidesPromises);
 // });
 tourSchema.pre(/^find/, function (this: mongoose.Query<ITour, ITour>, next) {
-  this.populate('guides');
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordLastModificationTime'
+  });
   next();
 });
 tourSchema.pre(/^find/, function (this: mongoose.Query<ITour, ITour>, next) {

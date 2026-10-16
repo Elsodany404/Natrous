@@ -25,10 +25,12 @@ export const uploadPhoto = multer({ storage, fileFilter }).single('photo');
 export const processPhoto = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     if (!req.file) return next();
-    const filename = `${Date.now()}${path.extname(req.file.originalname)}`;
+    // Photos are always converted to JPEG, so the extension is fixed
+    const filename = `user-${(req as authRequest).user.id}-${Date.now()}.jpeg`;
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-    const saveTo = path.resolve(__dirname, '../public/img/users');
+    // dist/controllers -> <project>/public/users, served at /img/users (app.ts)
+    const saveTo = path.resolve(__dirname, '../../public/users');
     const filePath = path.join(saveTo, filename);
 
     await sharp(req.file.buffer)

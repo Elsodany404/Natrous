@@ -5,7 +5,7 @@ type leafletLocation = {
   coordinates: [number, number];
   [key: string]: any;
 };
-export const createMap = (locations: leafletLocation) => {
+export const createMap = (locations: leafletLocation[]) => {
   if (!locations || !Array.isArray(locations) || locations.length === 0) {
     console.error('No valid locations provided for the map');
     return;
@@ -35,10 +35,10 @@ export const createMap = (locations: leafletLocation) => {
     });
 
     // Add markers and calculate bounds
+    // GeoJSON stores [lng, lat]; Leaflet expects [lat, lng]
     const coordsArr: [number, number][] = locations.map((loc) => {
-      const coordinates = loc.coordinates;
-      const coords: [number, number] = coordinates.reverse();
-      return coords;
+      const [lng, lat] = loc.coordinates;
+      return [lat, lng];
     });
 
     const bounds: [number, number][] = [];
@@ -66,7 +66,7 @@ export const createMap = (locations: leafletLocation) => {
         padding: [50, 50],
         maxZoom: 15
       });
-    } else {
+    } else if (coordsArr[0]) {
       map.setView(coordsArr[0], 13);
     }
   } catch (error) {

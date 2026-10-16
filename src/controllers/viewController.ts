@@ -22,19 +22,15 @@ export const getTour = catchAsync(
       return next(new AppError('There is no tour with this name', 404));
     }
     res.status(200).render('tour', {
-      title: tour.slug,
+      title: `${tour.name} Tour`,
       tour
     });
   }
 );
 export const getMostPopularTours = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const popularTours = await Tour.find()
-      .sort({ ratingsAverage: -1 })
-      .limit(3);
-    if (!popularTours || popularTours.length === 0) {
-      return next(new AppError('There are no tours', 404));
-    }
+  async (req: Request, res: Response) => {
+    // home.pug renders its own empty state when there are no tours yet
+    const popularTours = await Tour.find().sort({ ratingAverage: -1 }).limit(3);
     res.status(200).render('home', {
       title: 'Most Popular Tours',
       tours: popularTours
@@ -51,6 +47,21 @@ export const getSignup = catchAsync(async (req: Request, res: Response) => {
     title: 'sign up'
   });
 });
+export const getForgotPassword = catchAsync(
+  async (req: Request, res: Response) => {
+    res.status(200).render('forgotPassword', {
+      title: 'Forgot your password'
+    });
+  }
+);
+export const getResetPassword = catchAsync(
+  async (req: Request, res: Response) => {
+    res.status(200).render('resetPassword', {
+      title: 'Reset your password',
+      token: req.params.token
+    });
+  }
+);
 
 export const getProfile = catchAsync(async (req: Request, res: Response) => {
   res.status(200).render('profile', {

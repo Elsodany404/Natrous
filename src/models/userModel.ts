@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema<IUser>(
     password: {
       type: String,
       required: [true, 'Please insert a password'],
-      min: 8,
+      minlength: [8, 'Password must be at least 8 characters'],
       select: false
     },
     passwordConfirm: {
@@ -57,8 +57,15 @@ const userSchema = new mongoose.Schema<IUser>(
       }
     },
     passwordLastModificationTime: Date,
-    resetPasswordToken: String,
-    resetPasswordExpires: Date,
+    // Never sent back in API responses (e.g. tour guides, admin user lists)
+    resetPasswordToken: {
+      type: String,
+      select: false
+    },
+    resetPasswordExpires: {
+      type: Date,
+      select: false
+    },
     role: {
       type: String,
       enum: ['admin', 'user', 'lead-guide', 'guide'],

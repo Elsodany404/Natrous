@@ -40,17 +40,14 @@ app.use(
     }
   })
 );
-app.use(xss());
-app.use(
-  mongoSanitize({
-    replaceWith: '_'
-  })
-);
 // Rate limiting
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please try again after an hour'
+  message: {
+    status: 'fail',
+    message: 'Too many requests from this IP, please try again after an hour'
+  }
 });
 app.use('/api', limiter);
 
@@ -65,9 +62,32 @@ app.post(
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 
+// Data sanitization must run after the body parser, otherwise req.body is
+// still empty. Passwords are skipped so characters like & < > are not
+// HTML-escaped before hashing (that would break existing logins).
+app.use(
+  xss({
+    allowedKeys: [
+      'password',
+      'passwordConfirm',
+      'oldPassword',
+      'newPassword',
+      'newPasswordConfirm'
+    ]
+  })
+);
+app.use(
+  mongoSanitize({
+    replaceWith: '_'
+  })
+);
+
 // Enable CORS
 app.use(cors());
 app.options('*', cors());
+
+// Compression (before static files so they are compressed too)
+app.use(compression());
 
 // Static files
 const __filename = fileURLToPath(import.meta.url);
@@ -80,9 +100,6 @@ app.use(express.static(path.join(__dirname, '../public')));
 // View engine
 app.set('views', path.join(__dirname, '../src/views'));
 app.set('view engine', 'pug');
-
-// Compression
-app.use(compression());
 
 // Routers
 app.use('/', viewRouter);

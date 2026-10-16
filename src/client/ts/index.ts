@@ -1,5 +1,11 @@
 /* eslint-disable */
-import { login, logout, signup } from './login-signup';
+import {
+  login,
+  logout,
+  signup,
+  forgotPassword,
+  resetPassword
+} from './login-signup';
 import { createMap } from './leaflet';
 import { updateData, updatePassword } from './updateData';
 import toPaymentGateway from './payment';
@@ -8,9 +14,13 @@ import '../sass/app.scss';
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginFormEl = document.querySelector('.form--login');
-  const updatePasswordFormEl = document.querySelector('.form-user-settings');
+  const updatePasswordFormEl = document.querySelector('.form-user-password');
   const updateDataFormEl = document.querySelector('.form-user-data');
   const signupFormEl = document.querySelector('.form--signup');
+  const forgotPasswordFormEl = document.querySelector('.form--forgot-password');
+  const resetPasswordFormEl = document.querySelector<HTMLFormElement>(
+    '.form--reset-password'
+  );
   const logOutBtn = document.querySelector('.nav__el--logout');
   const mapEl = document.getElementById('map');
   const bookBtn = document.getElementById('bookingBtn');
@@ -91,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updatePasswordFormEl.addEventListener('submit', async (e) => {
         e.preventDefault();
         await updatePassword(
-          true,
           currentPasswordEl.value,
           newPasswordEl.value,
           confirmNewPasswordEl.value
@@ -113,23 +122,20 @@ document.addEventListener('DOMContentLoaded', () => {
       'photo'
     ) as HTMLInputElement | null;
 
-    if (!nameInputEl || !emailInputEl || !photoInputEl) return;
+    if (nameInputEl && emailInputEl && photoInputEl) {
+      updateDataFormEl.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    updateDataFormEl.addEventListener('submit', async (e) => {
-      e.preventDefault();
+        const form = new FormData();
+        form.append('name', nameInputEl.value);
+        form.append('email', emailInputEl.value);
 
-      const form = new FormData();
-      form.append('name', nameInputEl.value);
-      form.append('email', emailInputEl.value);
+        const photo = photoInputEl.files?.[0];
+        if (photo) form.append('photo', photo);
 
-      const photo = photoInputEl.files?.[0];
-      if (photo) form.append('photo', photo);
-
-      await updateData();
-
-      nameInputEl.value = '';
-      emailInputEl.value = '';
-    });
+        await updateData(form);
+      });
+    }
   }
 
   if (signupFormEl) {
@@ -146,30 +152,57 @@ document.addEventListener('DOMContentLoaded', () => {
       'password'
     ) as HTMLInputElement | null;
     if (
-      !nameInputEl ||
-      !confirmPasswordInputEl ||
-      !emailInputEl ||
-      !passwordInputEl
-    )
-      return;
-    signupFormEl.addEventListener('submit', (e) => {
-      e.preventDefault();
-      signup(
-        emailInputEl.value,
-        nameInputEl.value,
-        passwordInputEl.value,
-        confirmPasswordInputEl.value
-      );
-    });
+      nameInputEl &&
+      confirmPasswordInputEl &&
+      emailInputEl &&
+      passwordInputEl
+    ) {
+      signupFormEl.addEventListener('submit', (e) => {
+        e.preventDefault();
+        signup(
+          emailInputEl.value,
+          nameInputEl.value,
+          passwordInputEl.value,
+          confirmPasswordInputEl.value
+        );
+      });
+    }
+  }
+  if (forgotPasswordFormEl) {
+    const emailInputEl = document.getElementById(
+      'email'
+    ) as HTMLInputElement | null;
+    if (emailInputEl) {
+      forgotPasswordFormEl.addEventListener('submit', (e) => {
+        e.preventDefault();
+        forgotPassword(emailInputEl.value);
+      });
+    }
+  }
+  if (resetPasswordFormEl) {
+    const passwordInputEl = document.getElementById(
+      'password'
+    ) as HTMLInputElement | null;
+    const passwordConfirmInputEl = document.getElementById(
+      'passwordConfirm'
+    ) as HTMLInputElement | null;
+    const token = resetPasswordFormEl.dataset.token;
+    if (passwordInputEl && passwordConfirmInputEl && token) {
+      resetPasswordFormEl.addEventListener('submit', (e) => {
+        e.preventDefault();
+        resetPassword(
+          token,
+          passwordInputEl.value,
+          passwordConfirmInputEl.value
+        );
+      });
+    }
   }
   if (logOutBtn) {
-    try {
-      logOutBtn.addEventListener('click', () => {
-        logout();
-      });
-    } catch (err) {
-      console.error(err);
-    }
+    logOutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      logout();
+    });
   }
   if (mapEl) {
     try {
@@ -185,13 +218,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   if (bookBtn) {
-    bookBtn.addEventListener('click', function async(e) {
+    bookBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       const target = e.currentTarget as HTMLButtonElement;
-      target.innerText = 'processing...';
       const tourId = target.dataset.tourId;
       if (!tourId) return;
-      toPaymentGateway(tourId);
+      const buttonText = target.innerText;
+      target.innerText = 'processing...';
+      const redirected = await toPaymentGateway(tourId);
+      if (!redirected) target.innerText = buttonText;
     });
   }
 });

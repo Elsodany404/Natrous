@@ -38,7 +38,8 @@ class APIFeatures<T> {
       /\b(gt|gte|lt|lte)\b/g,
       (match) => `$${match}`
     );
-    this.query = this.model.find(JSON.parse(queryString));
+    // Refine the existing query so filters passed in (e.g. nested routes) are kept
+    this.query = this.query.find(JSON.parse(queryString));
     return this;
   }
 

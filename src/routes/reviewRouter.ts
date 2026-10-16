@@ -11,7 +11,11 @@ reviewRouter.use(authController.roleRestrictions('user', 'admin'));
 // GET ALL THE REVIEWS
 reviewRouter.get('/', reviewController.getAllReviews);
 // DELETE REVIEWS
-reviewRouter.delete('/:id', reviewController.deleteReview);
+reviewRouter.delete(
+  '/:id',
+  reviewController.checkReviewOwner,
+  reviewController.deleteReview
+);
 // CREATE REVIEW
 reviewRouter.post(
   '/',

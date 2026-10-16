@@ -35,7 +35,7 @@ const bookingSchema = new mongoose.Schema<IBooking>({
   },
   createdAt: {
     type: Date,
-    default: Date.now()
+    default: Date.now // do NOT call Date.now()
   }
 });
 // bookingSchema.pre(/^find/, function (next) {

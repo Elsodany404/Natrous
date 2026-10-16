@@ -21,13 +21,17 @@ class Email {
     this.url = url;
   }
   // SENDGRID NOT WORKING SO I USED MAILTRAP FOR TESTING PURPOSES
+  // SendGrid is only used in production when its credentials are set;
+  // otherwise fall back to Mailtrap so emails keep working.
   createTransport() {
-    if (process.env.NODE_ENV === 'production') {
+    const sendgridUser = process.env.SENDGRID_USERNAME;
+    const sendgridPass = process.env.SENDGRID_PASSWORD;
+    if (process.env.NODE_ENV === 'production' && sendgridUser && sendgridPass) {
       return nodemailer.createTransport({
         service: 'SendGrid',
         auth: {
-          user: process.env.SENDGRID_USERNAME,
-          pass: process.env.SENDGRID_PASSWORD
+          user: sendgridUser,
+          pass: sendgridPass
         }
       });
     }
@@ -39,7 +43,7 @@ class Email {
 
     if (!host || !port || !user || !pass) {
       throw new Error(
-        'Mailtrap configuration requires MAILTRAP_HOST, MAILTRAP_PORT, MAILTRAP_USER, and MAILTRAP_PASS or MAILTRAP_API_KEY'
+        'Email is not configured: set SENDGRID_USERNAME and SENDGRID_PASSWORD (production) or MAILTRAP_HOST, MAILTRAP_PORT, MAILTRAP_USER and MAILTRAP_PASS'
       );
     }
 

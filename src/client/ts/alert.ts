@@ -10,9 +10,11 @@ type alertMessage = {
   success: string;
 };
 export const showAlert = (type: 'success' | 'error', message: string) => {
+  hideAlert();
   const alertEl = document.createElement('div');
   alertEl.classList.add('alert', `alert--${type}`);
   alertEl.innerText = message;
-  document.body.insertAdjacentElement('beforebegin', alertEl);
+  // inside <body>, not before it
+  document.body.insertAdjacentElement('afterbegin', alertEl);
   setTimeout(hideAlert, 3000);
 };

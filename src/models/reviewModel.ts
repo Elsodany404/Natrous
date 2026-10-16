@@ -75,15 +75,19 @@ reviewSchema.statics.calcRatingOnReviews = async function (
   if (stats.length > 0) {
     await Tour.findByIdAndUpdate(tourId, {
       ratingAverage: stats[0].countAverage,
-      ratingQuantity: stats[0].countReviews
+      ratingsQuantity: stats[0].countReviews
     });
   } else {
     await Tour.findByIdAndUpdate(tourId, {
       ratingAverage: 4.5,
-      ratingQuantity: 0
+      ratingsQuantity: 0
     });
   }
 };
+
+// --------------------- INDEXES ---------------------
+// One review per user per tour
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
 
 // --------------------- DOCUMENT MIDDLEWARE ---------------------
 // After saving a review, recalc tour ratings
